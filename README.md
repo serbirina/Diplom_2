@@ -18,14 +18,20 @@ Tests are implemented with Java, JUnit, REST Assured, and generate Allure report
 ---
 ## Run Tests
 To run tests:  
-`mvn clean test`
+```
+mvn clean test
+```
 ---
 ## Allure Report
 
 ### Open an Already Generated Report
 To open an already generated report, run:  
-`allure open target/allure-report`
+```
+allure open target/allure-report
+```
 
 ### Generate New Report
 After running all tests, a new Allure report can be generated and opened:  
-`allure generate target/allure-results --clean -o target/allure-report`
+```
+allure generate target/allure-results --clean -o target/allure-report
+```

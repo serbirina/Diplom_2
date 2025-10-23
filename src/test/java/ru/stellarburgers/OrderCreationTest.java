@@ -1,13 +1,14 @@
 package ru.stellarburgers;
 
+import com.github.javafaker.Faker;
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.ValidatableResponse;
-import ru.stellarburgers.model.request.OrderCreationBody;
-import ru.stellarburgers.model.request.UserRegistrationBody;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import ru.stellarburgers.model.request.OrderCreationBody;
+import ru.stellarburgers.model.request.UserRegistrationBody;
 import ru.stellarburgers.step.OrderSteps;
 import ru.stellarburgers.step.UserSteps;
 
@@ -16,14 +17,21 @@ import static java.net.HttpURLConnection.HTTP_OK;
 import static org.hamcrest.CoreMatchers.notNullValue;
 
 public class OrderCreationTest extends BaseTest {
-    private final UserRegistrationBody userRegistrationBody = new UserRegistrationBody("email@mail.test", "interstellar", "Pulsar");
     private final UserSteps userSteps = new UserSteps();
     private final OrderSteps orderSteps = new OrderSteps();
+    Faker faker = new Faker();
     private OrderCreationBody orderCreationBody;
+
     private String accessToken;
 
     @Before
     public void setUp() {
+        String name = faker.name().firstName();
+        String email = faker.internet().safeEmailAddress();
+        String password = faker.internet().password(8, 16);
+
+        UserRegistrationBody userRegistrationBody = new UserRegistrationBody(email, password, name);
+
         ValidatableResponse response = userSteps.registrationUser(userRegistrationBody);
         response.statusCode(HTTP_OK).body("accessToken", notNullValue());
 

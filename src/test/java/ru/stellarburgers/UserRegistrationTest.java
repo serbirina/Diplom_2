@@ -1,11 +1,13 @@
 package ru.stellarburgers;
 
+import com.github.javafaker.Faker;
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.ValidatableResponse;
-import ru.stellarburgers.model.request.UserRegistrationBody;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import ru.stellarburgers.model.request.UserRegistrationBody;
 import ru.stellarburgers.step.UserSteps;
 
 import static java.net.HttpURLConnection.*;
@@ -13,10 +15,19 @@ import static org.hamcrest.Matchers.notNullValue;
 
 public class UserRegistrationTest extends BaseTest {
     private final UserSteps userSteps = new UserSteps();
-    private final String email = "email@mail.test";
-    private final String password = "interstellar";
-    private final String name = "Pulsar";
+    Faker faker = new Faker();
+
+    private String email;
+    private String password;
+    private String name;
     private String accessToken;
+
+    @Before
+    public void setUp() {
+        name = faker.name().firstName();
+        email = faker.internet().safeEmailAddress();
+        password = faker.internet().password(8, 16);
+    }
 
     @Test
     @DisplayName("Should return 200 when registering a user with valid required fields")
@@ -38,19 +49,54 @@ public class UserRegistrationTest extends BaseTest {
         UserRegistrationBody user = new UserRegistrationBody(email, password, name);
 
         ValidatableResponse response = userSteps.registrationUser(user);
-                response
-                        .statusCode(HTTP_OK)
-                        .body("accessToken", notNullValue());
+        response
+                .statusCode(HTTP_OK)
+                .body("accessToken", notNullValue());
         accessToken = userSteps.getAccessToken(response);
 
         response = userSteps.registrationUser(user);
         userSteps.assertThatUserNotRegistered(response, HTTP_FORBIDDEN, "User already exists");
     }
 
+    @Test
+    @DisplayName("Should return 403 when registering a user without a name")
+    @Description("Verify that a user cannot be registered without a name.\nExpected result: HTTP 403 response, response field \"success\" - false and an error message \"Email, password and name are required fields\" in response body.")
+    public void createUserWithoutNameShouldReturn403() {
+        UserRegistrationBody user = new UserRegistrationBody(email, password, "");
+
+        ValidatableResponse response = userSteps.registrationUser(user);
+        userSteps.assertThatUserNotRegistered(
+                response, HTTP_FORBIDDEN, "Email, password and name are required fields");
+    }
+
+    @Test
+    @DisplayName("Should return 403 when registering a user without an email")
+    @Description("Verify that a user cannot be registered without an email.\nExpected result: HTTP 403 response, response field \"success\" - false and an error message \"Email, password and name are required fields\" in response body.")
+    public void createUserWithoutEmailShouldReturn403() {
+        UserRegistrationBody user = new UserRegistrationBody("", password, name);
+
+        ValidatableResponse response = userSteps.registrationUser(user);
+        userSteps.assertThatUserNotRegistered(
+                response, HTTP_FORBIDDEN, "Email, password and name are required fields");
+    }
+
+    @Test
+    @DisplayName("Should return 403 when registering a user without a password")
+    @Description("Verify that a user cannot be registered without a password.\nExpected result: HTTP 403 response, response field \"success\" - false and an error message \"Email, password and name are required fields\" in response body.")
+    public void createUserWithoutPasswordShouldReturn403() {
+        UserRegistrationBody user = new UserRegistrationBody(email, "", name);
+
+        ValidatableResponse response = userSteps.registrationUser(user);
+        userSteps.assertThatUserNotRegistered(
+                response, HTTP_FORBIDDEN, "Email, password and name are required fields");
+    }
+
     @After
     public void cleanUp() {
-        userSteps
-                .deleteUser(accessToken)
-                .statusCode(HTTP_ACCEPTED);
+        if (accessToken != null) {
+            userSteps
+                    .deleteUser(accessToken)
+                    .statusCode(HTTP_ACCEPTED);
+        }
     }
 }
