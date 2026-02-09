@@ -1,5 +1,4 @@
-# Diplom_2
-## Automated API Tests for "Stellar Burgers"
+# Automated API Tests for "Stellar Burgers"
 Tests cover scenarios of using API endpoints for user registration, login, and order creation.
 Tests are implemented with Java, JUnit, REST Assured, and generate Allure reports.
 ---
